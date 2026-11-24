@@ -1,0 +1,52 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Federated Learning and Digital Twins in Healthcare}
+FL was introduced with the FedAvg algorithm~\cite{mcmahan2017communication}; its open problems in statistical heterogeneity, communication cost, privacy and participation are surveyed in~\cite{kairouz2021advances,lu2024noniid}. In medicine, FL has been advocated as a way to train across institutions without pooling records~\cite{rieke2020future} and has been demonstrated with privacy-preserving training on multi-institutional imaging data~\cite{kaissis2021end}. On wearable and in-home devices, FedHome~\cite{wu2022fedhome} personalizes models for in-home health monitoring at the cloud--edge boundary. Surveys of FL for smart healthcare and medical applications are available in~\cite{nguyen2022federated,rauniyar2024federated}.
+
+The digital twin, a virtual replica kept synchronized with its physical counterpart, has been taken up in medicine for precision cardiology~\cite{corral2020digital}, personalized medicine and public health~\cite{kamelboulos2021digital}, and remote patient monitoring~\cite{khan2024implementing}; a recent review is given in~\cite{rudsari2025digital}. In edge networks, twins have been combined with FL to reduce communication cost~\cite{lu2021communication} and to allocate energy and other resources~\cite{zhou2025energy,chu2024resource}. A review of twins combined with blockchain and FL for healthcare is given in~\cite{hemdan2025smart}. In these works the twin is a model of the network or of the device. In the present work it also carries a patient state whose forecast constrains the scheduler.
+
+\subsection{Energy- and Communication-Efficient Federated Learning}
+Client selection under resource constraints was formulated in FedCS~\cite{nishio2019client}. Joint optimization of computation and transmission energy over wireless links is analysed in~\cite{tran2019federated,yang2021energy}, and battery-aware selection for mobile clients in~\cite{arouj2022towards}. The uplink payload can be reduced by quantization, as in QSGD~\cite{alistarh2017qsgd}, or by adaptive model compression~\cite{zhu2025adaptcomp}. These methods optimize a resource objective; participation fairness and update integrity are outside their scope.
+
+\subsection{Fairness and Multi-Objective Client Scheduling}
+\rtag{E1, R1.1, R2.1}\begin{revblock}Fairness in FL has two meanings. Performance fairness asks that the model serve all clients or groups comparably, as in $q$-fair FL~\cite{li2020fair} and minimax group fairness~\cite{papadaki2022minimax}; for electronic health records, the effect of federated training on group fairness is studied in~\cite{poulain2023improving}. Participation fairness asks that clients be selected at comparable rates, and it matters for the optimization itself, because biased selection changes the stationary point of training~\cite{cho2022towards,wang2020tackling}.
+
+Several schedulers already combine participation fairness with a second criterion, and they are the closest prior work. RBCS-F~\cite{huang2021efficiency} minimizes training time subject to a long-term fairness constraint and solves the problem with a virtual queue and the drift-plus-penalty method of Lyapunov optimization. FairFedCS~\cite{shi2023fairfedcs} selects the clients with the largest additive index of a contribution-based reputation and a fairness queue. Trust-FedGNN~\cite{reis2026trustfedgnn} combines trust-weighted aggregation with energy-aware scheduling of clients in a graph-learning setting. In the terminology of multi-objective optimization~\cite{marler2004survey}, these rules are a constraint-based formulation, a weighted sum and a staged design, respectively. The rule studied here is a weighted product. It is compared in Section~\ref{subsec:schedulers} with a weighted sum, a drift-plus-penalty rule, two sequential pipelines and FairFedCS, all operating on identical clients, channels and data.\end{revblock}
+
+\subsection{Robust Aggregation and Trust}
+Byzantine-robust aggregation replaces the average by a statistic that tolerates a minority of arbitrary inputs: Krum and Multi-Krum~\cite{blanchard2017machine}, the coordinate-wise median and the trimmed mean~\cite{yin2018byzantine}, and the geometric median computed by the Weiszfeld iteration~\cite{pillutla2022robust}. Other defences score updates by their direction: FLTrust weights each update by its cosine to an update computed on a trusted root data set~\cite{cao2021fltrust}, and clipping with history is analysed in~\cite{karimireddy2021learning}. Model-replacement backdoors~\cite{bagdasaryan2020backdoor} show that a single crafted update can implant a hidden behaviour that survives averaging. The credibility engine of ATEF-DT belongs to the direction-scoring family and uses the geometric median as its reference; it is compared with four robust aggregation rules in Section~\ref{subsec:byzantine}.
+
+\subsection{Privacy in Federated Learning}
+\rtag{R1.6}\begin{revblock}Keeping records on the device does not by itself protect them. Model updates can be inverted to reconstruct training samples~\cite{zhu2019deep}, and the same exposure enables membership inference. Formal protection is obtained with differential privacy (DP), by clipping each contribution and adding calibrated noise, at the level of samples~\cite{abadi2016deep} or of clients~\cite{wei2020federated}; the trade-off between the privacy budget and convergence in FL is analysed in~\cite{wei2020federated}. Two recent lines of work are directly relevant to partial participation and constrained devices. Li \emph{et al.}~\cite{li2025differentially} develop a differentially private federated stochastic primal--dual method for the Internet of Vehicles and characterize its privacy--utility trade-off, and Li \emph{et al.}~\cite{li2025federated} show that splitting the model and randomizing client participation strengthens the privacy guarantee obtained for a given noise level. Secure aggregation~\cite{bonawitz2017practical} hides individual updates from the server cryptographically. ATEF-DT implements neither DP nor secure aggregation. Its privacy threat model, and the reasons why its deterministic selection and per-update inspection do not combine directly with these mechanisms, are set out in Section~\ref{subsec:privacy}.\end{revblock}
+
+\subsection{Position of This Work}
+\label{subsec:position}
+\rtag{E1, R1.1, R2.1}\begin{revblock}Table~\ref{tab:comparison} places ATEF-DT among representative works. Coverage of several criteria is not by itself a contribution, so the claim of this article is stated in testable form and examined in Section~\ref{sec:results}: a single-stage weighted-product rule over energy, participation and reputation (i) needs no normalization of the criteria against each other, because its ranking is invariant to their scale, (ii) reaches a required participation fairness with significantly less energy than a fairness-first pipeline and, on average, with less energy than an energy-first pipeline, and (iii) achieves this at an energy cost equivalent to that of a carefully tuned weighted sum or drift-plus-penalty rule, without the re-tuning that those rules require when the scale of a criterion changes.\end{revblock}
+
+\begin{table*}[t]
+	\centering
+	\revcap{E1, R1.1, R2.1}{Comparison of ATEF-DT with representative prior work ($\checkmark$ addressed, $\circ$ partly addressed, $\times$ not addressed).}
+	\label{tab:comparison}
+	\footnotesize
+	\setlength{\tabcolsep}{4pt}
+	\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X c c c c c >{\raggedright\arraybackslash}p{3.6cm}}
+		\toprule
+		\textbf{Work} & \textbf{Energy or resources} & \textbf{Participation fairness} & \textbf{Robustness or trust} & \textbf{Digital twin} & \textbf{Health setting} & \textbf{Combination of criteria} \\
+		\midrule
+		FedAvg~\cite{mcmahan2017communication} & $\times$ & $\times$ & $\times$ & $\times$ & $\times$ & none (uniform sampling) \\
+		FedCS~\cite{nishio2019client} & $\checkmark$ & $\times$ & $\times$ & $\times$ & $\times$ & single criterion \\
+		Energy-efficient wireless FL~\cite{yang2021energy} & $\checkmark$ & $\times$ & $\times$ & $\times$ & $\times$ & single criterion \\
+		EAFL~\cite{arouj2022towards} & $\checkmark$ & $\times$ & $\times$ & $\times$ & $\times$ & single criterion \\
+		RBCS-F~\cite{huang2021efficiency} & $\circ$ & $\checkmark$ & $\times$ & $\times$ & $\times$ & drift-plus-penalty \\
+		FairFedCS~\cite{shi2023fairfedcs} & $\times$ & $\checkmark$ & $\circ$ & $\times$ & $\times$ & weighted sum (additive index) \\
+		Trust-FedGNN~\cite{reis2026trustfedgnn} & $\checkmark$ & $\times$ & $\checkmark$ & $\times$ & $\times$ & separate stages \\
+		FLTrust~\cite{cao2021fltrust} & $\times$ & $\times$ & $\checkmark$ & $\times$ & $\times$ & none (aggregation only) \\
+		Robust federated aggregation~\cite{pillutla2022robust} & $\times$ & $\times$ & $\checkmark$ & $\times$ & $\times$ & none (aggregation only) \\
+		Twin edge networks~\cite{lu2021communication,zhou2025energy} & $\checkmark$ & $\times$ & $\times$ & $\checkmark$ & $\times$ & single criterion \\
+		FedHome~\cite{wu2022fedhome} & $\times$ & $\times$ & $\times$ & $\times$ & $\checkmark$ & none \\
+		\midrule
+		\textbf{ATEF-DT (this work)} & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & weighted product, single stage \\
+		\bottomrule
+	\end{tabularx}
+\end{table*}

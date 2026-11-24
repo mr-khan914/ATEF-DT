@@ -1,0 +1,6 @@
+Sign flipping & update multiplied by $-1$ \\
+Gaussian poisoning & update replaced by a draw from $\mathcal{N}(\mathbf{0},(3\sigma_u)^2\mathbf{I})$, with $\sigma_u$ the root mean square of the update the client would have sent \\
+Label flipping & local labels inverted before training \\
+Scaled / boosted & update multiplied by $10$ \\
+Backdoor insertion & trigger of four standard deviations on three features, target class benign, half of the local samples poisoned, update multiplied by $5$ \\
+Adaptive (angular) & identical colluding updates at cosine $0.1$ to the mean of the honest updates, along a common random direction, with the median honest norm \\

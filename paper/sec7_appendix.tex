@@ -1,0 +1,43 @@
+\section{Properties of the Selection Score}
+\label{app:score}
+\begin{lemma}[Smallest values]
+	\label{lem:topk}
+	Let $v_p\in\mathbb{R}$ for $p$ in a finite set $\cF$ and let $1\le k\le|\cF|$. A set consisting of $k$ elements with the smallest values minimizes $\sum_{p\in\cS}v_p$ over all $\cS\subseteq\cF$ with $|\cS|=k$.
+\end{lemma}
+\begin{proof}
+	Let $\cS$ consist of $k$ elements with the smallest values and let $\cS'$ be any other subset of size $k$. Pair each $p'\in\cS'\setminus\cS$ with a distinct $p\in\cS\setminus\cS'$; the two difference sets have the same size. Since $p\in\cS$ and $p'\notin\cS$, $v_p\le v_{p'}$. Summing over the pairs gives $\sum_{p\in\cS}v_p\le\sum_{p\in\cS'}v_p$.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:optimal}]
+	(a)~Apply Lemma~\ref{lem:topk} with $v_p=\ln s_p^{(r)}=\lambda_E\ln\tilde e_p+\lambda_F\ln\tilde u_p+\lambda_T\ln\tilde t_p$. The logarithm is increasing, so the $k_r$ clients with the smallest scores are those with the smallest $v_p$, and the sum of the $v_p$ is the objective of~\eqref{eq:roundproblem}. (b)~Suppose $q\in\cF^{(r)}\setminus\cS^{(r)}$ dominates $p\in\cS^{(r)}$. All factors are positive and all exponents are positive, so $s_q^{(r)}<s_p^{(r)}$. But $p$ is selected and $q$ is not, which requires $s_p^{(r)}\le s_q^{(r)}$, a contradiction.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:pipeline}]
+	Write $k=k_r$ and let all clients have the same reputation, so that the trust factor is a common constant. \emph{Energy first.} Let $\bar k$ clients have predicted energy $0$ and participation count $n$, and let $k$ further clients have predicted energy $e_1>0$ and participation count $0$. By~\eqref{eq:efactor} and~\eqref{eq:ufactor}, the first group has $\tilde e=\varepsilon_0$ and $\tilde u=1$, and the second has $\tilde e=e_1/(e_1+\varepsilon_0)+\varepsilon_0\le 1+\varepsilon_0$ and $\tilde u=1/(n+1)$. The pipeline keeps the first group and selects $k$ of its members. The ratio of the score of a member of the first group to that of a member of the second is at least $(\varepsilon_0/(1+\varepsilon_0))^{\lambda_E}(n+1)^{\lambda_F}$, which exceeds any $\theta>1$ for $n$ large enough; the second group is then the minimizer, and the product of the scores selected by the pipeline exceeds the minimum by more than $\theta^k\ge \theta$. \emph{Fairness first.} Let $k$ clients (group A) have count $0$ and the largest predicted energy, let $\bar k-k\ge 1$ clients (group B) have count $(n-1)/2$ for an odd $n$ and predicted energy $0$, and let at least one further client have count $n$. Then $\tilde u=1/(n+1)$ and $\tilde e\le 1+\varepsilon_0$ in group A, and $\tilde u=1/2$ and $\tilde e=\varepsilon_0$ in group B. The pipeline keeps groups A and B and then prefers group B, so it selects at least one member of group B. The ratio of the score of a member of group B to that of a member of group A is at least $(\varepsilon_0/(1+\varepsilon_0))^{\lambda_E}((n+1)/2)^{\lambda_F}$, which exceeds $\theta$ for $n$ large enough; group A is then the minimizer, and replacing one of its members by a member of group B multiplies the product by more than $\theta$.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:scale}]
+	The transformation multiplies every score by the same constant $c_E^{\lambda_E}c_F^{\lambda_F}c_T^{\lambda_T}>0$ and therefore preserves their order. For the weighted sum, take two clients with $(\tilde e,\tilde u)=(0.2,1)$ and $(1,0.5)$, equal trust factors and $\lambda_E=\lambda_F=1$. The sums are $1.2$ and $1.5$, so the first client is preferred. With $c_E=0.1$ they become $1.02$ and $0.6$, and the second client is preferred. The products are $0.2$ and $0.5$ before the transformation and $0.02$ and $0.05$ after it; the first client is preferred in both cases.
+\end{proof}
+
+\section{Proof of Theorem~\ref{thm:convergence}}
+\label{app:proofs}
+\rtag{E3, R1.3, R2.3}\rev{By Assumption~\ref{ass:smooth} and~\eqref{eq:applied},
+\begin{equation*}
+	F(\w^{(r+1)})\le F(\w^{(r)})-\eta\,\langle\nabla F(\w^{(r)}),\g^{(r)}\rangle+\frac{L\eta^2}{2}\norm{\g^{(r)}}^2 .
+\end{equation*}
+Write $\nabla F$ for $\nabla F(\w^{(r)})$ and $\bar{\g}=\E_r[\g^{(r)}]=\bar s_r(\nabla F+\tilde{\bb}_r)$ with $\tilde{\bb}_r=\bb_r/\bar s_r$. Taking $\E_r$, using $\E_r\norm{\g^{(r)}}^2=\norm{\bar{\g}}^2+\E_r\norm{\g^{(r)}-\bar{\g}}^2\le\norm{\bar{\g}}^2+V$, and then $L\eta\le 1$ and $\bar s_r\le 1$, so that $L\eta^2\bar s_r^2\le\eta\,\bar s_r$,
+\begin{align*}
+	\E_r F(\w^{(r+1)})&\le F(\w^{(r)})-\eta\,\bar s_r\langle\nabla F,\nabla F+\tilde{\bb}_r\rangle\\
+	&\quad+\frac{\eta\,\bar s_r}{2}\norm{\nabla F+\tilde{\bb}_r}^2+\frac{L\eta^2V}{2}\\
+	&=F(\w^{(r)})-\frac{\eta\,\bar s_r}{2}\norm{\nabla F}^2+\frac{\eta\,\bar s_r}{2}\norm{\tilde{\bb}_r}^2+\frac{L\eta^2V}{2},
+\end{align*}
+where the equality expands the square. Since $\bar s_r\ge s_{\min}$ and $\bar s_r\norm{\tilde{\bb}_r}^2=\norm{\bb_r}^2/\bar s_r\le B^2/s_{\min}$ by Assumption~\ref{ass:update},
+\begin{equation*}
+	\frac{\eta\,s_{\min}}{2}\norm{\nabla F(\w^{(r)})}^2\le F(\w^{(r)})-\E_r F(\w^{(r+1)})+\frac{\eta B^2}{2s_{\min}}+\frac{L\eta^2V}{2}.
+\end{equation*}
+Taking the total expectation, summing over $r=0,\dots,R-1$, using $F(\w^{(R)})\ge F^{\star}$ and dividing by $\eta\,s_{\min}R/2$ gives~\eqref{eq:bound}.}
+
+\section{Reproducibility}
+\label{app:repro}
+\rtag{E5, R2.7}\begin{revblock}The repository contains the package \texttt{atefdt} (data, model, system and energy model, quantizer, twin, selection rules, credibility engine, aggregation rules, attacks and the round-level simulator), the configuration file \texttt{configs/default.yaml} with the values of Table~\ref{tab:setup}, and three scripts. \texttt{experiments/run\_all.py} runs every experiment of Sections~\ref{sec:experiments} and~\ref{sec:results} and writes the results and the per-transmission logs; \texttt{experiments/make\_values.py} converts the results into the numbers and table bodies of this article; \texttt{experiments/make\_figures.py} draws Figures~\ref{fig:convergence}--\ref{fig:overhead}. No number in the article is typed by hand. A test suite checks the gradient of the model, the unbiasedness of the quantizer, Lemma~\ref{lem:rep}, Propositions~\ref{prop:optimal}--\ref{prop:scale} on random instances, the bound $s^{(r)}\ge\rho_{\min}/2$, the energy accounts, the determinism of the runs and the agreement of a fresh run with the stored results. The complete protocol runs in about three minutes on one processor core and requires only NumPy, SciPy, scikit-learn, Matplotlib and PyYAML; the versions used are recorded in the repository. Each seed fixes the partition, the initial model, the device parameters, the fading sequence and the adversaries through independent random streams, so a result can be reproduced exactly from its seed.\end{revblock}

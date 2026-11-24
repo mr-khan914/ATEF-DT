@@ -1,0 +1,40 @@
+# ATEF-DT default configuration (values of Section 5.2 of the manuscript).
+# Any field of atefdt/config.py can be overridden here.
+seeds: [0, 1, 2, 3, 4]
+
+# data
+split_seed: 2026
+dirichlet_alpha: 0.5
+
+# federated learning
+P: 20
+S_max: 8
+R: 50
+lr: 1.0            # chosen on the validation split from {0.1, 0.2, 0.5, 1.0}
+local_epochs: 1
+
+# energy / radio
+alpha: 1.0e-6
+P_tx: 0.1
+eta_pa: 0.35
+per: 1.0e-2
+W: 1.0e+6
+nu: 0.15
+c_q: 64
+noise_gap: 1.0e-3
+c_min: 1.0
+
+# quantization
+b_min: 4
+b_max: 16
+gamma_b: 0.5
+
+# trust
+mu: 0.60
+rho_min: 0.05
+
+# selection score
+lam_E: 1.0
+lam_F: 3.0
+lam_T: 0.4
+eps0: 0.1

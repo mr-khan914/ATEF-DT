@@ -1,0 +1,78 @@
+\section{Convergence Analysis}
+\label{sec:convergence}
+\rtag{E3, R1.3, R2.3}\begin{revblock}The analysis concerns the update that Algorithm~\ref{alg:atef} actually applies. Selection probabilities and aggregation weights are kept apart: selection decides who transmits, the coefficients $\beta_p^{(r)}$ decide how much each received update counts, and the bias of the procedure depends on their combination. No assumption is made that relates selection probabilities to data proportions. The argument follows the analysis of gradient methods with biased search directions~\cite{ajalloeian2020convergence}; analyses of FedAvg under partial participation~\cite{wang2020tackling} rely on unbiased sampling or on weights proportional to the data volumes, neither of which holds for the rule studied here.
+
+Write $\hat{\g}_p^{(r)}=-\uh_p^{(r)}/\eta$ for the pseudo-gradient that the server receives from client $p$. By~\eqref{eq:agg}, the model evolves as
+\begin{equation}
+	\w^{(r+1)}=\w^{(r)}-\eta\,\g^{(r)},\qquad \g^{(r)}=\sum_{p\in\cA^{(r)}}\beta_p^{(r)}\,\hat{\g}_p^{(r)} .
+	\label{eq:applied}
+\end{equation}
+Let $\E_r[\cdot]$ denote the expectation conditional on the history up to the start of round $r$; it is taken over the fading, the rounding of the quantizer and any randomness of the clients. Define the expected step scale and the bias of the applied direction,
+\begin{equation}
+	\bar s_r=\E_r\bigl[s^{(r)}\bigr],\qquad \bb_r=\E_r\bigl[\g^{(r)}\bigr]-\bar s_r\,\nabla F(\w^{(r)}),
+	\label{eq:biasdef}
+\end{equation}
+with $s^{(r)}$ from~\eqref{eq:stepscale}.
+
+\begin{assumption}[Smoothness]
+	\label{ass:smooth}
+	$F$ is bounded below by $F^{\star}$ and has an $L$-Lipschitz gradient.
+\end{assumption}
+
+\begin{assumption}[Bias and variance of the applied update]
+	\label{ass:update}
+	There are constants $s_{\min}\in(0,1]$, $B\ge 0$ and $V\ge 0$ such that, for every round, $\bar s_r\ge s_{\min}$, $\norm{\bb_r}\le B$ and $\E_r\norm{\g^{(r)}-\E_r[\g^{(r)}]}^2\le V$.
+\end{assumption}
+
+\begin{theorem}[Convergence to a neighbourhood]
+	\label{thm:convergence}
+	Under Assumptions~\ref{ass:smooth} and~\ref{ass:update}, with a learning rate $\eta\le 1/L$,
+	\begin{equation}
+		\frac{1}{R}\sum_{r=0}^{R-1}\E\norm{\nabla F(\w^{(r)})}^2\;\le\;\frac{2\bigl(F(\w^{(0)})-F^{\star}\bigr)}{\eta\,s_{\min}\,R}+\frac{B^2}{s_{\min}^2}+\frac{L\,\eta\,V}{s_{\min}} .
+		\label{eq:bound}
+	\end{equation}
+\end{theorem}
+
+The proof is given in \ref{app:proofs}. With the learning rate $\eta=\min\{1/L,\,R^{-1/2}\}$, the first and third terms decay as $O(R^{-1/2})$, and the bound tends to $B^2/s_{\min}^2$. The procedure therefore reaches a neighbourhood of a stationary point whose radius is set by the bias; it is not claimed to reach a stationary point of $F$.
+
+\begin{remark}[What the theorem covers]
+	\label{rem:scope}
+	The selection rule, the gate, the clipping, the reputation weights and the quantizer enter~\eqref{eq:bound} only through $s_{\min}$, $B$ and $V$. The theorem therefore holds for the actual selection rule of Algorithm~\ref{alg:atef}, and equally for any other rule, but it is conditional: the constants are assumed, not derived from the rule. For the step scale, $s^{(r)}\ge\rho_{\min}/2$ whenever no update is rejected (Section~\ref{subsec:credibility}), and the measured values are reported in Section~\ref{subsec:fairres}. The bias has a participation part, which is bounded next, and a part caused by the dependence between the coefficients and the received vectors. Under attack the second part contains the contribution of the adversaries, and no bound on it is claimed outside Assumption~\ref{ass:threat}.
+\end{remark}
+
+\subsection{Participation and Weighting Bias}
+\label{subsec:bias}
+Define the effective aggregation weight of client $p$ in round $r$ and its normalized form,
+\begin{equation}
+	\pi_p^{(r)}=\E_r\bigl[\beta_p^{(r)}\,\mathbb{1}[p\in\cA^{(r)}]\bigr],\qquad \hat\pi_p^{(r)}=\frac{\pi_p^{(r)}}{\bar s_r},
+	\label{eq:effweight}
+\end{equation}
+so that $\sum_p\pi_p^{(r)}=\bar s_r$ and $\sum_p\hat\pi_p^{(r)}=1$. The effective weight is the product of two things that the earlier formulation conflated: the probability that the client's update is accepted, and the coefficient it then receives. Adding and subtracting $\sum_p\pi_p^{(r)}\nabla f_p(\w^{(r)})$ in~\eqref{eq:biasdef} splits the bias as $\bb_r=\mathbf{c}_{\mathrm{part}}^{(r)}+\mathbf{c}_{\mathrm{agg}}^{(r)}$ with
+\begin{align}
+	\mathbf{c}_{\mathrm{part}}^{(r)}&=\bar s_r\sum_{p\in\cP}\Bigl(\hat\pi_p^{(r)}-\frac{N_p}{N}\Bigr)\nabla f_p(\w^{(r)}), \label{eq:cpart}\\
+	\mathbf{c}_{\mathrm{agg}}^{(r)}&=\E_r\Bigl[\sum_{p\in\cA^{(r)}}\beta_p^{(r)}\bigl(\hat{\g}_p^{(r)}-\nabla f_p(\w^{(r)})\bigr)\Bigr]. \label{eq:cagg}
+\end{align}
+
+\begin{assumption}[Bounded dissimilarity]
+	\label{ass:dissim}
+	$\norm{\nabla f_p(\w)-\nabla F(\w)}\le\zeta$ for all $p\in\cP$ and all $\w$.
+\end{assumption}
+
+\begin{proposition}[Participation bias]
+	\label{prop:bias}
+	Under Assumption~\ref{ass:dissim}, with $\hat{\boldsymbol{\pi}}^{(r)}$ the vector of normalized effective weights and $\mathbf{n}/N$ the vector of data proportions,
+	\begin{equation}
+		\norm{\mathbf{c}_{\mathrm{part}}^{(r)}}\;\le\;\bar s_r\,\zeta\,\norm{\hat{\boldsymbol{\pi}}^{(r)}-\mathbf{n}/N}_1\;\le\;\bar s_r\,\zeta\,\sqrt{P}\,\norm{\hat{\boldsymbol{\pi}}^{(r)}-\mathbf{n}/N}_2 .
+		\label{eq:biasbound}
+	\end{equation}
+	In particular, $\mathbf{c}_{\mathrm{part}}^{(r)}=\mathbf{0}$ whenever $\hat{\boldsymbol{\pi}}^{(r)}=\mathbf{n}/N$.
+\end{proposition}
+\begin{proof}
+	Both $\hat{\boldsymbol{\pi}}^{(r)}$ and $\mathbf{n}/N$ sum to one, so the gradient $\nabla F(\w^{(r)})$ can be subtracted inside the sum of~\eqref{eq:cpart} without changing it:
+	\begin{equation*}
+		\mathbf{c}_{\mathrm{part}}^{(r)}=\bar s_r\sum_{p\in\cP}\Bigl(\hat\pi_p^{(r)}-\frac{N_p}{N}\Bigr)\bigl(\nabla f_p(\w^{(r)})-\nabla F(\w^{(r)})\bigr).
+	\end{equation*}
+	The triangle inequality and Assumption~\ref{ass:dissim} give the first bound, and $\norm{\cdot}_1\le\sqrt{P}\,\norm{\cdot}_2$ gives the second.
+\end{proof}
+
+Three consequences follow. First, the bound~\eqref{eq:biasbound} and the bias~\eqref{eq:cpart} are expressed in the same quantity, the distance between the effective weights and the data proportions, and both are zero when that distance is zero; the bound cannot vanish while the bias does not. Second, equal selection probabilities do not remove the bias. With the reputation weights of~\eqref{eq:agg}, a scheduler that selects all clients equally often and finds them equally credible has $\hat\pi_p^{(r)}\approx 1/P$, and the bias is governed by $\norm{\mathbf{1}/P-\mathbf{n}/N}_1$, which is zero only for balanced data. The fairness exponent $\lambda_F$ moves $\hat{\boldsymbol{\pi}}^{(r)}$ towards the uniform vector, not towards $\mathbf{n}/N$. It reduces the bias to the extent that an energy-driven rule over-weights a few inexpensive clients, and no monotone dependence of the bias on $\lambda_F$ is claimed; the measured dependence is shown in Section~\ref{subsec:fairres}. Third, for $E=1$ the quantizer bounds the second part: $\norm{\hat{\g}_p^{(r)}-\nabla f_p(\w^{(r)})}=\norm{\uh_p^{(r)}-\uu_p^{(r)}}/\eta\le\sqrt{d}\,\Delta_p^{(r)}/\eta$, where $\Delta_p^{(r)}$ is the quantization step of~\eqref{eq:quant}, so that $\norm{\mathbf{c}_{\mathrm{agg}}^{(r)}}\le(\sqrt{d}/\eta)\,\E_r[\max_{p}\Delta_p^{(r)}]$ in the absence of adversaries. For $E>1$ this part also contains the drift of the local iterates, which is not analysed here.\end{revblock}

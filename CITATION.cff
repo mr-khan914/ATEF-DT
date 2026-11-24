@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the article below."
+title: "ATEF-DT: reference implementation and experiment scripts"
+version: 1.0.0
+date-released: 2026-11-15
+license: MIT
+authors:
+  - name: "The ATEF-DT authors (names withheld during double-blind review)"
+preferred-citation:
+  type: article
+  title: "ATEF-DT: Multi-Objective Energy, Fairness, and Trust Optimization for Federated Digital-Twin Healthcare"
+  authors:
+    - name: "The ATEF-DT authors (names withheld during double-blind review)"
+  journal: "Journal of King Saud University - Computer and Information Sciences"
+  year: 2026
+  notes: "Under review; update this entry on publication."
