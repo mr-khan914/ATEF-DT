@@ -111,11 +111,6 @@ def resolve_revision_marks(text: str, clean: bool) -> str:
     text = _replace_cmd(text, "rev", 1, lambda x: x if clean else "{\\color{revcur}" + x + "}")
     text = text.replace("\\begin{revblock}", "" if clean else "\\begingroup\\color{revcur}")
     text = text.replace("\\end{revblock}", "" if clean else "\\endgroup{}")
-    # legend box
-    a = text.index("\\ifshowrev\n\\noindent\\fbox")
-    b = text.index("\\fi\n", a) + 3
-    legend = text[a + len("\\ifshowrev\n"):b - 3]
-    text = text[:a] + ("" if clean else legend) + text[b:]
     if clean:
         a = text.index("%% -- Revision marks")
         b = text.index("\\definecolor{revRtwo}")
