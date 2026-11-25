@@ -1,167 +1,141 @@
-# ATEF-DT
+# ATEF-DT: Adaptive Trust-Aware and Energy-Fair Federated Learning for Digital-Twin Healthcare
 
-Reference implementation and complete experiment pipeline for the article
+<p align="center">
+  <img src="figures/architecture.png" alt="ATEF-DT framework" width="850"/>
+</p>
 
-> **ATEF-DT: Multi-Objective Energy, Fairness, and Trust Optimization for Federated Digital-Twin Healthcare**
+<p align="center">
+  <img src="https://img.shields.io/badge/Paper-JKSUCIS%20(under%20review)-blue?style=flat-square" alt="Paper"/>
+  <img src="https://img.shields.io/badge/Python-3.9+-green?style=flat-square&logo=python" alt="Python"/>
+  <img src="https://img.shields.io/badge/NumPy%20%7C%20SciPy%20%7C%20scikit--learn-CPU%20only-orange?style=flat-square" alt="Dependencies"/>
+  <img src="https://img.shields.io/badge/Tests-52%20passing-brightgreen?style=flat-square" alt="Tests"/>
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License"/>
+</p>
 
-ATEF-DT schedules battery-constrained clients of a federated-learning system with a single
-weighted-product score over predicted round energy, participation history and reputation.
-A patient-centric digital twin forecasts the monitoring energy a device must keep in
-reserve; selected clients quantize their update with a per-client bit-width; the server
-compares the received updates with a geometric-median reference and aggregates them with
-reputation weights after norm clipping.
+---
 
-Every number, table and figure of the article is produced by the three scripts in
-`experiments/` from the logs in `results/`. Nothing in the article is typed by hand.
+## 📋 Overview
 
-## What is real and what is simulated
+This repository contains the reference implementation of **ATEF-DT** and the scripts that reproduce every number, table and figure of the article *"ATEF-DT: Multi-Objective Energy, Fairness, and Trust Optimization for Federated Digital-Twin Healthcare"*.
 
-| Component | Status |
-|---|---|
-| Clinical data (Wisconsin Diagnostic Breast Cancer, 569 cases, 30 features) | real, loaded from scikit-learn |
-| Model training (30-64-1 perceptron, NumPy) | real, executed in full |
-| Client partition, devices, batteries, wireless channel | simulated from stated distributions |
-| Energy | computed from the model of Section 3.3, **not measured on hardware** |
-| Physiological streams for the twin test | synthetic |
-| Adversaries | simulated (six attack models) |
-| Server run time | measured wall-clock time of this code |
+ATEF-DT schedules battery-constrained medical devices in federated learning. Each training round passes through four modules:
 
-## Quick start
+- **Patient-centric digital twin**: tracks the patient's state and reserves the energy needed for monitoring
+- **Energy-aware client selection**: ranks devices by energy, participation and reputation
+- **Local training and adaptive quantization**: each selected device trains locally and sends a compressed update
+- **Credibility-based resilient aggregation**: combines the updates with reputation weights and filters unreliable ones
+
+The learning task uses the public **Wisconsin Diagnostic Breast Cancer (WDBC)** data set, which ships with scikit-learn. The devices, wireless channel, energy and adversaries are simulated. No GPU or download is needed.
+
+---
+
+## 📁 Repository Structure
+
+```
+ATEF-DT/
+├── README.md
+├── requirements.txt
+├── Makefile                  # one-line commands for every step
+├── configs/
+│   └── default.yaml          # all simulation and model settings
+├── atefdt/                   # the method and the simulator
+│   ├── twin.py               # patient-centric digital twin
+│   ├── system.py             # devices, channel and energy model
+│   ├── selection.py          # client-selection rules
+│   ├── quantization.py       # adaptive quantization
+│   ├── trust.py              # credibility engine (reputation)
+│   ├── aggregation.py        # aggregation rules
+│   ├── attacks.py            # adversarial clients
+│   ├── simulator.py          # one federated training run
+│   └── ...                   # data, model, metrics, config
+├── experiments/
+│   ├── run_all.py            # runs all experiments
+│   ├── make_values.py        # turns results into the article's numbers and tables
+│   └── make_figures.py       # draws all figures
+├── results/                  # stored results and per-transmission logs
+├── figures/                  # preview figures
+├── paper/                    # LaTeX sources of the article
+└── tests/                    # 52 automated tests
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Installation
 
 ```bash
+git clone <repository-url> ATEF-DT
+cd ATEF-DT
 pip install -r requirements.txt
-python -m pytest -q tests                 # 52 tests, a few seconds
-python experiments/run_all.py --quick --out /tmp/atefdt_quick   # smoke test, about 20 s
-python experiments/run_all.py             # full protocol of the article, about 3 min on one core
-python experiments/make_values.py         # paper/values.tex and paper/tables/*.tex
-python experiments/make_figures.py        # paper/figures/*.png (600 dpi) and figures/*.png
-cd paper && sh build.sh main              # optional: rebuild the PDF (needs pdflatex and bibtex)
 ```
 
-`make reproduce` runs the three experiment scripts in order; `make test`, `make quick`
-and `make paper` are also available. A single experiment can be run with, for example,
-`python experiments/run_all.py --only main byzantine`.
+### 2. Check the installation
 
-Running one method directly:
-
-```python
-from atefdt.config import load_config
-from atefdt.simulator import run
-
-cfg = load_config()                       # configs/default.yaml
-r = run(cfg, "atef_dt", seed=0)
-print(r["final_acc"], r["E_total"], r["jain_all"])
-r = run(cfg, "atef_dt", seed=0, attack="label_flip", adv_frac=0.2)
-print(r["final_acc"], r["mal_weight_share"])
+```bash
+make test        # runs the 52 tests (a few seconds)
+make quick       # short demo run with two seeds (about 20 seconds)
 ```
 
-## Main result (five seeds, no adversaries)
+### 3. Reproduce the article
 
-| Method | Accuracy (%) | Sensitivity (%) | Energy (J) | Jain index | Uplink (Mb) |
-|---|---|---|---|---|---|
-| FedAvg-Full | 97.02 ± 1.00 | 95.7 ± 1.1 | 52.14 ± 3.80 | 0.995 ± 0.007 | 63.6 |
-| FedAvg-Random | 97.37 ± 1.07 | 95.7 ± 2.0 | 21.30 ± 1.56 | 0.963 ± 0.015 | 26.2 |
-| EA-FL | 95.26 ± 1.82 | 93.3 ± 4.3 | 11.28 ± 1.53 | 0.441 ± 0.010 | 26.2 |
-| FairFedCS | 97.54 ± 2.00 | 97.6 ± 2.4 | 21.63 ± 1.46 | 0.835 ± 0.052 | 26.2 |
-| Energy+Trust | 95.79 ± 0.73 | 91.4 ± 5.5 | 11.66 ± 1.43 | 0.466 ± 0.032 | 26.2 |
-| Energy+Fair | 96.84 ± 0.48 | 95.7 ± 1.1 | 19.27 ± 1.03 | 0.974 ± 0.004 | 26.2 |
-| **ATEF-DT** | 96.67 ± 0.73 | 92.9 ± 2.9 | 17.72 ± 1.03 | 0.968 ± 0.004 | 3.6 |
-
-Mean ± sample standard deviation over seeds 0–4, 20 clients, at most 8 per round, 50 rounds.
-The full set of results, including the attack scenarios in which the method fails, is in the
-article and in `results/`.
-
-## Repository layout
-
-```
-atefdt/               the package
-  config.py           all parameters (dataclass) and the YAML loader
-  data.py             WDBC split, Dirichlet and bootstrap partitions
-  model.py            perceptron with analytic gradient (NumPy)
-  system.py           devices, Rayleigh block fading, energy model
-  quantization.py     stochastic quantizer, stability surrogate, bit-width rule
-  twin.py             Kalman twin, acuity, monitoring duty, synthetic patient
-  selection.py        product score and all baseline selection rules
-  trust.py            geometric median, cosine signal, reputation
-  aggregation.py      reputation-weighted rule and robust-aggregation baselines
-  attacks.py          six attack models
-  simulator.py        run(): one method, one seed, all reported quantities
-  metrics.py          Jain index, paired tests, JSON helpers
-configs/default.yaml  the configuration of the article
-experiments/
-  run_all.py          all experiments -> results/*.json, results/logs/tx_*.csv
-  make_values.py      results -> paper/values.tex, paper/tables/*.tex
-  make_figures.py     results -> paper/figures/*.png (600 dpi), figures/*.png
-tests/                unit and end-to-end tests
-results/              stored results of the full protocol (regenerable)
-figures/              PNG previews of the figures (paper/figures/fig_framework.drawio is the editable
-                      source of Figure 1)
-paper/                LaTeX source of the article (main.tex, sections, values.tex, tables, figures,
-                      references.bib, REFERENCE_AUDIT.md, build.sh, flatten.py, texmf/ with the class files)
+```bash
+make reproduce   # runs everything, then writes the numbers, tables and figures
 ```
 
-## From the article to the code
+The full protocol takes about **three minutes on one CPU core**. Each seed fixes the data partition, the devices, the channel and the adversaries, so the results are identical on every run. Only the measured server run times depend on the machine.
 
-| Article | Experiment (`run_all.py --only ...`) | Output |
-|---|---|---|
-| Table 5, Fig. 2 (accuracy, convergence) | `main` | `results/main.json` |
-| Table 6, Fig. 3 (energy) | `main` | `results/main.json`, `results/logs/tx_*.csv` |
-| Table 7, Fig. 4 (bit-width policies, traffic) | `quant` | `results/quant.json` |
-| Fig. 5, Table 8 (participation, device tiers) | `main` | `results/main.json` |
-| Fig. 6 (fairness exponent, participation bias) | `fairness` | `results/fairness.json` |
-| Fig. 7, Table 9 (multi-objective schedulers, rescaling) | `schedulers` | `results/schedulers.json` |
-| Tables 10–15, Fig. 8 (attacks, robust aggregation) | `byzantine` | `results/byzantine.json` |
-| Table 16 (reputation sensitivity, onset, weighted reference) | `trust` | `results/trust.json` |
-| Table 17 (twin functional test) | `twin` | `results/twin.json` |
-| Table 18, Fig. 9 (ablation) | `main`, `byzantine` | as above |
-| Fig. 10, Table 19, Fig. 11a (scalability, server time) | `scalability` | `results/scalability.json` |
-| Table 20, Fig. 11b (energy-parameter sensitivity) | `sensitivity` | `results/sensitivity.json` |
-| learning-rate selection, outage rate, data statistics | `setup` | `results/setup.json` |
+### 4. Run the steps one by one
 
-Method keys accepted by `run()` are listed in `atefdt.simulator.METHODS`
-(`fedavg_full`, `fedavg_random`, `ea_fl`, `fairfedcs`, `energy_trust`, `energy_fair`,
-`ef_trust`, `atef_dt`, the bit-width variants `atef_q16`, `atef_q8`, `atef_qglobal`, the
-schedulers `wsum`, `dpp`, `seq_ef`, `seq_fe`, the matched variants `atef_norep`,
-`atef_norep_gm`, and the robust aggregators `ra_cwmed`, `ra_trimmed`, `ra_mkrum`, `ra_gm`).
+```bash
+make results     # 1) run all experiments        -> results/
+make values      # 2) numbers and table bodies   -> paper/values.tex, paper/tables/
+make figures     # 3) figures                    -> paper/figures/ and figures/
+make paper       # 4) compile the article (needs pdflatex and bibtex)
+```
 
-## Per-transmission logs
+Without `make`, use the scripts directly, for example `python experiments/run_all.py`.
 
-`results/logs/tx_<method>.csv` holds one row per uplink transmission with the columns
-`seed, round, client, N_p, kappa_p, h, bits_per_coord, E_comp_J, E_uplink_J, E_downlink_J,
-accepted, malicious, coefficient`. The energy and traffic totals of the article are sums
-over these rows.
+---
 
-## Reproducibility
+## ⚙️ Changing the Settings
 
-* A seed fixes, through independent random streams, the partition, the initial model, the
-  device parameters, the complete fading sequence and the placement of the adversaries.
-  These are identical for every method run with that seed.
-* Runs are deterministic: the same seed gives the same numbers.
-* The stored `results/` were produced with Python 3.13, NumPy 2.5, SciPy 1.18,
-  scikit-learn 1.9 and Matplotlib 3.11. Other versions that satisfy `requirements.txt`
-  should give the same results up to floating-point rounding; the test
-  `test_fresh_run_agrees_with_the_shipped_results` checks this.
-* The learning rate was selected on the validation split with FedAvg-Full
-  (`results/setup.json`).
+All settings are in `configs/default.yaml`, for example the number of clients, rounds, participation budget, battery range and the selection weights. Edit the file and run `make reproduce` again. To keep the original results, write to a new folder:
 
-## Limitations
+```bash
+python experiments/run_all.py --out my_results
+python experiments/make_values.py --results my_results --out my_paper
+python experiments/make_figures.py --results my_results --out my_figures
+```
 
-The energy figures are model outputs, not hardware measurements. The evaluation uses one
-small tabular data set and one full-batch local step per round. The reputation layer fails
-against colluding clients and when adversaries hold half of a round; the corresponding
-results are part of the article and of `results/byzantine.json`. The twin layer is tested on
-synthetic streams only. See Section 6.9 of the article.
+---
 
-## Data
+## 📊 Outputs
 
-The Wisconsin Diagnostic Breast Cancer data set (Wolberg, Mangasarian, Street and Street,
-UCI Machine Learning Repository, doi:10.24432/C5DW2B) is distributed with scikit-learn and
-is loaded with `sklearn.datasets.load_breast_cancer`; no download is needed.
+| Folder | Content |
+|---|---|
+| `results/*.json` | results of every experiment and seed |
+| `results/logs/*.csv` | per-transmission logs (energy, bits, bit-width) |
+| `paper/values.tex`, `paper/tables/` | the numbers and table bodies used in the article |
+| `paper/figures/` | figures at 600 dpi for the article |
+| `figures/` | smaller preview figures |
 
-## License and citation
+---
 
-The code is released under the MIT License (see `LICENSE`). Please cite the article; see
-`CITATION.cff`.
-#   A T E F - D T  
- #   A T E F - D T  
- 
+## 📜 Citation
+
+```bibtex
+@article{atefdt2026,
+  title   = {ATEF-DT: Multi-Objective Energy, Fairness, and Trust Optimization
+             for Federated Digital-Twin Healthcare},
+  journal = {Journal of King Saud University - Computer and Information Sciences},
+  year    = {2026},
+  note    = {Under review}
+}
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License; see [LICENSE](LICENSE) for details. The WDBC data set is from the UCI Machine Learning Repository and is distributed with scikit-learn.
