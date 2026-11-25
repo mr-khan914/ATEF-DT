@@ -105,19 +105,6 @@ python experiments/make_values.py --results my_results --out my_paper
 python experiments/make_figures.py --results my_results --out my_figures
 ```
 
----
-
-## 📊 Outputs
-
-| Folder | Content |
-|---|---|
-| `results/*.json` | results of every experiment and seed |
-| `results/logs/*.csv` | per-transmission logs (energy, bits, bit-width) |
-| `paper/values.tex`, `paper/tables/` | the numbers and table bodies used in the article |
-| `paper/figures/` | figures at 600 dpi for the article |
-| `figures/` | smaller preview figures |
-
----
 
 ## 📜 Citation
 
