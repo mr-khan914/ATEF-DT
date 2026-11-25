@@ -25,8 +25,7 @@ ATEF-DT schedules battery-constrained medical devices in federated learning. Eac
 - **Local training and adaptive quantization**: each selected device trains locally and sends a compressed update
 - **Credibility-based resilient aggregation**: combines the updates with reputation weights and filters unreliable ones
 
-The learning task uses the public **Wisconsin Diagnostic Breast Cancer (WDBC)** data set, which ships with scikit-learn. The devices, wireless channel, energy and adversaries are simulated. No GPU or download is needed.
-
+The learning task uses the public **Wisconsin Diagnostic Breast Cancer (WDBC)** data set, which ships with scikit-learn. The devices, wireless channel, energy and adversaries are simulated.
 ---
 
 ## 📁 Repository Structure
